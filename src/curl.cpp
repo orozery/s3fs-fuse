@@ -1871,6 +1871,8 @@ bool S3fsCurl::RemakeHandle(void)
   partdata.size      = b_partdata_size;
 
   // reset handle
+  curl_easy_cleanup(hCurl);
+  hCurl = curl_easy_init();
   ResetHandle();
 
   // set options
