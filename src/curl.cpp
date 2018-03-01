@@ -1764,7 +1764,9 @@ bool S3fsCurl::DestroyCurlHandle(void)
 
   S3fsCurl::curl_times.erase(hCurl);
   S3fsCurl::curl_progress.erase(hCurl);
-  sCurlPool->ReturnHandler(hCurl);
+  if(retry_count == 0){
+    sCurlPool->ReturnHandler(hCurl);
+  }
   hCurl = NULL;
   ClearInternalData();
 
@@ -1874,7 +1876,12 @@ bool S3fsCurl::RemakeHandle(void)
   partdata.size      = b_partdata_size;
 
   // reset handle
+  curl_easy_cleanup(hCurl);
+  hCurl = curl_easy_init();
   ResetHandle();
+  // disable ssl cache, so that a new session will be created
+  curl_easy_setopt(hCurl, CURLOPT_SSL_SESSIONID_CACHE, 0);
+  curl_easy_setopt(hCurl, CURLOPT_SHARE, NULL);
 
   // set options
   switch(type){
