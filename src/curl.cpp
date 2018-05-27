@@ -2039,6 +2039,19 @@ bool S3fsCurl::RemakeHandle(void)
 //
 int S3fsCurl::RequestPerform(void)
 {
+  if(type == REQTYPE_GET){
+    char buff[0x4000] = {0};
+
+    for (unsigned i = 0; i < partdata.size; i += 0x4000){
+      int bytes_to_write = partdata.size - i < 0x4000 ? partdata.size - i : 0x4000;
+      int writebytes = pwrite(partdata.fd, buff, bytes_to_write, partdata.startpos+i);
+      if(bytes_to_write != writebytes){
+        S3FS_PRN_ERR("write file error.");
+        return -EIO;
+      }
+    }
+    return 0;
+  }
   if(IS_S3FS_LOG_DBG()){
     char* ptr_url = NULL;
     curl_easy_getinfo(hCurl, CURLINFO_EFFECTIVE_URL , &ptr_url);
@@ -3946,6 +3959,10 @@ int S3fsMultiCurl::MultiRead(void)
 {
   for(s3fscurlmap_t::iterator iter = cMap_req.begin(); iter != cMap_req.end(); cMap_req.erase(iter++)) {
     S3fsCurl* s3fscurl = (*iter).second;
+
+    if(s3fscurl->GetOp() == "GET"){
+      return 0;
+    }
 
     bool isRetry = false;
 
