@@ -2912,8 +2912,12 @@ int S3fsCurl::PutRequest(const char* tpath, headers_t& meta, int fd)
 
   // Make request headers
   string strMD5;
-  if(-1 != fd && S3fsCurl::is_content_md5){
-    strMD5         = s3fs_get_content_md5(fd);
+  if(S3fsCurl::is_content_md5){
+    if(fd == -1){
+      strMD5 = "1B2M2Y8AsgTpgAmY7PhCfg=="; // empty string Content-MD5
+    }else{
+      strMD5 = s3fs_get_content_md5(fd);
+    }
     requestHeaders = curl_slist_sort_insert(requestHeaders, "Content-MD5", strMD5.c_str());
   }
 
